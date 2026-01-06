@@ -312,9 +312,10 @@ function parseTiktok (header, data) {
   let lines = [];
   flatten(data[0], header)
 
+
   data.forEach(function(row) {
     try {
-      //challenges = [[challenge["title"] for challenge in post.get("challenges", [])]]]
+      
       challenges = []
       if (row['data']['challenges'] != null) {
         row['data']['challenges'].forEach(challenge => challenges.push(challenge.title));
@@ -341,7 +342,6 @@ function parseTiktok (header, data) {
       user_fullname = ""
       user_id = ""
 
-      
       if (typeof(row['data']['author']) == Object) {
         const _u = JSON.parse(row['data']['author'])
 
@@ -353,8 +353,6 @@ function parseTiktok (header, data) {
         user_fullname = row['data']["author"]["nickname"]
         user_id = ""
       }
-    
-    if (typeof(row['data']['author']) == Object) {
 
       thumbnail_options = []
       if (row['data']["video"]!= null) {
@@ -368,6 +366,7 @@ function parseTiktok (header, data) {
         thumbnail_options.push(JSON.parse(JSON.stringify(row['data']["video"]))["cover"]);
         }
       }
+    
 
       thumbnail_url = []
       const now = new Date()/1000;
@@ -377,9 +376,7 @@ function parseTiktok (header, data) {
         if ( parseInt(parse_qs(thumb)['x-expires']) >= now) {
           if (thumb != " ") { thumbnail_url.push(thumb); }
         }
-      } 
-      
-      )
+      })
 
       let effects = []
       if(row['data']["effectStickers"] != null) { 
@@ -441,12 +438,15 @@ function parseTiktok (header, data) {
         "warning": `"${warnings.join(',')}"`,
         "verified": row['data']['author']['verified']
     }
+
       lines.push(Object.values(rows).join(','))
+      console.log(lines);
       if (header.length == 0) { header = Object.keys(rows);}
-    } 
+
   } catch (e) {
       console.error("Error parsing TikTok row:", e);
     }
+    
   })
 
   const csv = [
