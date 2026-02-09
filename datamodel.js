@@ -35,11 +35,11 @@ function parseTwitter (header, data) {
 
         const quote_tweet = row['data']["quoted_status_result"];
         if (quote_tweet && quote_tweet['result']) {
-          console.log(quote_tweet);
+
           if ('tombstone' in quote_tweet['result']) { quotewithheld = true }
-          console.log(quotewithheld);
+
           if (!quotewithheld && quote_tweet['result']['legacy']) {
-            console.log(quote_tweet['result']['legacy']);
+
             if (quote_tweet['result']['core'] && quote_tweet['result']['core']['user_results']) {
               quoteauthor = quote_tweet['result']['core']['user_results']['result']['core']['screen_name'];
             }
@@ -204,10 +204,8 @@ function parseInstagram (header, data) {
         }
 
         media_nodes.forEach(mn => {
-          console.log(mn);
-          console.log(mn["media_type"]);
 
-          if (mn["media_type"] == MEDIA_TYPE_VIDEO) {
+          if (mn["media_type"] == 2) {
             media_url.push(mn["video_versions"][0]["url"]);
 
             if ("image_versions2" in mn) {
@@ -215,11 +213,12 @@ function parseInstagram (header, data) {
             } else {
               display_url.push(mn["video_versions"][0]["url"])
             }
-          } else if ((mn["media_type"] == MEDIA_TYPE_PHOTO) && "image_versions2" in mn) {
+          } else if ((mn["media_type"] == 1) && "image_versions2" in mn) {
             const mediaurl = mn["image_versions2"]["candidates"][0]["url"];
             display_url.push(mediaurl);
             media_url.push(mediaurl);
           } else {
+            display_url.push(mn['data']["image_versions2"]["additional_candidates"]["first_frame"]["url"])
             missing_media = "";
           }
 
@@ -440,7 +439,7 @@ function parseTiktok (header, data) {
     }
 
       lines.push(Object.values(rows).join(','))
-      console.log(lines);
+
       if (header.length == 0) { header = Object.keys(rows);}
 
   } catch (e) {
