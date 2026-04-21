@@ -19,8 +19,10 @@ function parseTwitter (header, data) {
         const dt = new Date(row["data"]["legacy"]["created_at"]);
 
         const retweet = row["data"]["legacy"]["retweeted"]
-        if (retweet) { 
-          retweet["result"] = retweet["result"]["tweet"] 
+        if (retweet) {
+          if (typeof retweet === 'object' && retweet["result"]) {
+            retweet["result"] = retweet["result"]["tweet"]
+          }
           const rt_text = "RT @" + row["data"]["core"]["user_results"]["result"][user_key]["screen_name"] +
                    ": " + row["data"]["legacy"]["full_text"]
           row['data']["legacy"]["full_text"] = escapeHTML(rt_text);
@@ -194,7 +196,7 @@ function parseInstagram (header, data) {
         const num_media = (row['data']["media_type"] != MEDIA_TYPE_CAROUSEL)? 1 : row['data']["carousel_media"].length;
         let media_type = "unknown";
         
-        const type_map = {MEDIA_TYPE_PHOTO: "photo", MEDIA_TYPE_VIDEO: "video"};
+        const type_map = {[MEDIA_TYPE_PHOTO]: "photo", [MEDIA_TYPE_VIDEO]: "video"};
 
         let media_nodes = [];
         if (row['data']["media_type"] == MEDIA_TYPE_CAROUSEL) {
@@ -230,10 +232,11 @@ function parseInstagram (header, data) {
         media_type = (media_types.length > 1) ? "mixed" : (media_types.length > 0 ? media_types.pop() : "unknown");
 
    
-        let location = {"name": "", "latlong": "", "city": ""}
+        let location = {"name": "", "latlong": "", "city": "", "id": ""}
 
         if (row['data']["location"]) {
           location["name"] = row['data']["location"]["name"].toString();
+          location["id"] = row['data']["location"]["pk"] || "";
           // Leaving this though it does not appear to be used in this type; maybe we'll be surprised in the future...
           location["latlong"] = (row['data']["location"]["lat"]) ? row['data']["location"]["lat"] + "," + row['data']["location"]["lng"] : "";
           location["city"] = row['data']["location"]["city"]
@@ -262,11 +265,11 @@ function parseInstagram (header, data) {
               "parent_id": _id,
               "url": "https://www.instagram.com/p/" + _id,
               "body" : `"${escapeHTML(caption)}"`,
-              "author": `"${row['data']["owner"]["username"]}"`,
-              "author_fullname": (row["data"]["user"]["full_name"])? `"${row["data"]["user"]["full_name"]}"`:""  ,
+              "author": `"${row['data']["owner"]?.["username"] || row['data']["user"]?.["username"] || "unknown"}"`,
+              "author_fullname": (row["data"]["user"] && row["data"]["user"]["full_name"])? `"${row["data"]["user"]["full_name"]}"`:""  ,
               "is_verified": (row['data']['is_verified']) ? true : false,
-              "timestamp": dt.getFullYear() + "-" + (dt.getMonth()  + 1) + "-" + dt.getDate() + " " + dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds(), 
-              "author_avatar_url": (row['data']['user']["profile_pic_url"])? row['data']['user']["profile_pic_url"]: "",
+              "timestamp": dt.getFullYear() + "-" + (dt.getMonth()  + 1) + "-" + dt.getDate() + " " + dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds(),
+              "author_avatar_url": (row['data']['user'] && row['data']['user']["profile_pic_url"])? row['data']['user']["profile_pic_url"]: "",
               "coauthors": "", 
               "coauthors_fullname": "",
               "coauthors_ids": "",
@@ -343,9 +346,7 @@ function parseTiktok (header, data) {
       user_fullname = ""
       user_id = ""
 
-      if (typeof(row['data']['author']) == Object) {
-        const _u = JSON.parse(row['data']['author'])
-
+      if (typeof(row['data']['author']) === 'object' && row['data']['author'] !== null) {
         user_nickname = row['data']["author"]["uniqueId"]
         user_fullname = row['data']["author"]["nickname"]
         user_id = row['data']["author"]["id"]
@@ -418,11 +419,11 @@ function parseTiktok (header, data) {
         "unix_timestamp": row['data']["createTime"],
         "is_duet":  (row['data']["duetInfo"] && row['data']["duetInfo"]["duetFromId"] != "0") ? "yes" :"no",
         "is_ad": (row['data']["isAd"] == "yes")? "yes" : "no",
-        "music_name": `"${row['data']["music"]["title"]}"`,
-        "music_id": row['data']["music"]["id"],
-        "music_url": (row['data']["music"]["playUrl"] != null) ? row['data']["music"]["playUrl"] : "",
-        "music_thumbnail": (row['data']["music"]["coverLarge"] != null) ? row['data']["music"]["coverLarge"] : "",
-        "music_author": (row['data']["music"]["authorName"] != null) ? `"${row['data']["music"]["authorName"]}"` : "",
+        "music_name": row['data']["music"] ? `"${row['data']["music"]["title"]}"` : "",
+        "music_id": row['data']["music"] ? row['data']["music"]["id"] : "",
+        "music_url": (row['data']["music"] && row['data']["music"]["playUrl"] != null) ? row['data']["music"]["playUrl"] : "",
+        "music_thumbnail": (row['data']["music"] && row['data']["music"]["coverLarge"] != null) ? row['data']["music"]["coverLarge"] : "",
+        "music_author": (row['data']["music"] && row['data']["music"]["authorName"] != null) ? `"${row['data']["music"]["authorName"]}"` : "",
         "video_url": (row['data']["video"]["downloadAddr"] != null) ? row['data']["video"]["downloadAddr"] : "",
         "tiktok_url": "https://www.tiktok.com/@" + user_nickname + "/video/" + row['data']['id'],
         "thumbnail_url": `"${thumbnail_url}"`,
