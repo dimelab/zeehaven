@@ -200,7 +200,7 @@ function parseInstagram (header, data) {
         if (row['data']["media_type"] == MEDIA_TYPE_CAROUSEL) {
           media_nodes = row['data']['carousel_media']
         } else {
-          media_nodes.push(row)
+          media_nodes.push(row['data'])
         }
 
         media_nodes.forEach(mn => {
@@ -218,7 +218,9 @@ function parseInstagram (header, data) {
             display_url.push(mediaurl);
             media_url.push(mediaurl);
           } else {
-            display_url.push(mn['data']["image_versions2"]["additional_candidates"]["first_frame"]["url"])
+            if (mn["image_versions2"] && mn["image_versions2"]["additional_candidates"] && mn["image_versions2"]["additional_candidates"]["first_frame"]) {
+              display_url.push(mn["image_versions2"]["additional_candidates"]["first_frame"]["url"])
+            }
             missing_media = "";
           }
 
